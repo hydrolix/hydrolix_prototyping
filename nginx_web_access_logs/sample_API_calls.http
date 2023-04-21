@@ -1,0 +1,208 @@
+
+#################################################################################
+####
+#### Sample REST Calls - if using VS Code, be sure to install http extension
+####
+#### (1) update hostname, username, password variables below first, by clicking "send request" button
+#### (2) then run GET login request, response will provide orgid and apikey, update both below
+#### (3) then run GET projects request, response will provide projectid, update below
+#### (4) then run GET tables request, response will provide tableid, update below
+######
+######
+####   several other sample REST calls have been provided
+####   
+####   this file works very nicely within VS Code with the http plug-in installed
+
+#### the following values should be filled out, starting with hostname, username, and password before running log in call
+#### no quotes are needed
+#### for example:  
+####  @hostname = https://mysubnet.myawesomehydrolixcluster.net
+####  @username = user@email.com
+####  @password = abc123
+####  @orgId = 1111111-29e6-41db-a3c2-00702223333
+####  @projectid = 
+####  @tableid = 
+####  @apikey = Bearer eylsdlfkdflesjfeofje #{about 100 characters}
+####
+@hostname = 
+@username = 
+@password =  
+@orgid = 
+@projectid = 
+@tableid = 
+@apikey = 
+
+#################################################################################
+####
+#### LOGIN to authenticate 
+#### this will provide a bearer token which you can use for secure REST calls
+####
+POST {{hostname}}/config/v1/login/
+accept: application/json
+Content-Type: application/json
+
+{
+     "username": "{{username}}",
+     "password": "{{password}}"
+}
+####
+#################################################################################
+
+#################################################################################
+####
+### GET PROJECTS
+GET {{hostname}}/config/v1/orgs/{{orgid}}/projects/
+accept: application/json
+authorization: {{apikey}}
+####
+#################################################################################
+
+#################################################################################
+####
+###get tables within a project
+curl --request GET \
+     --url {{hostname}}/config/v1/orgs/{{orgid}}/projects/{{projectid}}/tables/ \
+     --header 'accept: application/json' \
+     --header 'authorization: {{apikey}}'
+####
+#################################################################################
+
+#################################################################################
+####
+###get  singletable 
+curl --request GET \
+     --url {{hostname}}/config/v1/orgs/{{orgid}}/projects/{{projectid}}/tables/{{tableid}}/ \
+     --header 'accept: application/json' \
+     --header 'authorization: {{apikey}}'
+####
+#################################################################################
+
+#################################################################################
+####
+###get transforms for a given table
+
+curl --request GET \
+     --url {{hostname}}/config/v1/orgs/{{orgid}}/projects/{{projectid}}/tables/{{tableid}}/transforms/ \
+     --header 'accept: application/json' \
+     --header 'authorization: {{apikey}}'
+
+#################################################################################
+####
+### GET DICTIONARIES
+curl --request GET \
+     --url {{hostname}}/config/v1/orgs/{{orgid}}/projects/{{projectid}}/dictionaries/ \
+     --header 'accept: application/json' \
+     --header 'authorization: {{apikey}}'
+####
+#################################################################################
+
+
+#################################################################################
+####
+#### CREATE TABLE - creating a table can be done with hdxcli too
+####                this POST is very useful to update table settings
+####                
+####
+####
+####
+####
+curl --request POST \
+     --url https://{{hostname}}/config/v1/orgs/{{orgid}}/projects/{{projectid}}/tables/ \
+     --header 'accept: application/json' \
+     --header 'authorization: {{apikey}}' \
+     --header 'content-type: application/json' \
+     --data '
+{
+  "settings": {
+    "stream": {
+      "hot_data_max_age_minutes": 60,
+      "hot_data_max_active_partitions": 12,
+      "hot_data_max_rows_per_partition": 1048576,
+      "hot_data_max_minutes_per_partition": 5,
+      "hot_data_max_open_seconds": 10,
+      "hot_data_max_idle_seconds": 5,
+      "cold_data_max_age_days": 365,
+      "cold_data_max_active_partitions": 24,
+      "cold_data_max_rows_per_partition": 1048576,
+      "cold_data_max_minutes_per_partition": 60,
+      "cold_data_max_open_seconds": 10,
+      "cold_data_max_idle_seconds": 10
+    },
+    "age": {
+      "max_age_days": 0
+    },
+    "reaper": {
+      "max_age_days": 1
+    },
+    "merge": {
+      "enabled": true
+    },
+    "autoingest": [
+      {
+        "enabled": false,
+        "source": "",
+        "pattern": "",
+        "max_rows_per_partition": 12288000,
+        "max_minutes_per_partition": 60,
+        "max_active_partitions": 50,
+        "dry_run": false
+      }
+    ],
+    "shard_key": null,
+    "max_future_days": 0
+  },
+  "type": "turbine"
+}
+'
+####
+#################################################################################
+
+#################################################################################
+####
+####  sample ingest - JSON format - add a token if enforcing security - by default, ingest works with names not id's
+####   
+####                  this POST won't work with the NGINX example 
+####                  and is included as an example of JSON approach to ingesting data
+####                  since this is a very common approach
+####
+curl --request POST \
+     --url '{{hostname}}/ingest/event?table={project_name}.{table_name}&transform={transform_name}' \
+     --header 'accept: application/json' \
+     --header 'content-type: application/json' \
+     --data '
+[
+    {
+        "primary": "14/06/2022 13:06:47",
+        "some_int32": 99,
+        "some_other_int32": 1234
+    },
+    {
+        "primary": "14/06/2022 13:06:48",
+        "some_int32": 99
+    },
+    {
+        "primary": "14/06/2022 13:06:49",
+        "some_int32": 123
+    }
+]
+'
+####
+#################################################################################
+
+#################################################################################
+####
+#### sample query of table
+#### authorization token is only needed if security is turned on
+#### more information here: https://docs.hydrolix.io/docs/query-authentication
+####
+#################################################################################
+curl --request POST \
+     --url {{hostname}}/query \
+     --header 'accept: text/json' \
+     --header 'content-type: text/plain' \
+     --header 'authorization: {{apikey}}' \
+     --data 'select * from  hydrolix_demo_projects.nginx limit  10 '
+####
+#################################################################################
+
+

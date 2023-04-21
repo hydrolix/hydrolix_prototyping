@@ -1,0 +1,145 @@
+{
+  "name": "nginx_access_logs",
+  "description": "Sample nginx access logs - simple rendition",
+  "settings": {
+    "is_default": true,
+    "sql_transform": "SELECT  primary, \n remote_ip,\nparseDateTimeBestEffort(concat(timestamp::String, ' ', replaceOne(timezone_offset, ']', ''))) AS timestamp,\ntimezone_offset,\nrequest,\nstatus_code,\nrequest_size,\nclient\nFROM {STREAM}",
+    "null_values": [],
+    "sample_data": "40.77.167.129 - - [02/Jan/2019:03:56:18 +0330] \"GET /image/45437/productModel/150x150 HTTP/1.1\" 200 3688 \"-\" \"Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)\" \"-\"\n",
+    "output_columns": [
+      {
+        "name": "primary",
+        "datatype": {
+          "type": "datetime",
+          "index": false,
+          "primary": true,
+          "source": {
+            "from_automatic_value": "current_time"
+          },
+          "format": "02/01/2006 15:04:05",
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "remote_ip",
+        "datatype": {
+          "type": "string",
+          "index": true,
+          "primary": false,
+          "source": {
+            "from_input_index": 0
+          },
+          "format": null,
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "timestamp",
+        "datatype": {
+          "type": "datetime",
+          "index": true,
+          "source": {
+            "from_input_index": 3
+          },
+          "format": "[2/Jan/2006:15:04:05",
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "timezone_offset",
+        "datatype": {
+          "type": "string",
+          "index": true,
+          "primary": false,
+          "source": {
+            "from_input_index": 4
+          },
+          "format": null,
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "request",
+        "datatype": {
+          "type": "string",
+          "index": true,
+          "index_options": {
+            "fulltext": true,
+            "major_separators": "[ ] < > ( ) { } | ! ; , ' \" * \\n \\r \\s \\t & ? +",
+            "minor_separators": "/ : = @ . - $ # % \\ _"
+          },
+          "primary": false,
+          "source": {
+            "from_input_index": 5
+          },
+          "format": null,
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "status_code",
+        "datatype": {
+          "type": "string",
+          "index": true,
+          "source": {
+            "from_input_index": 6
+          },
+          "format": null,
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "request_size",
+        "datatype": {
+          "type": "int64",
+          "index": false,
+          "source": {
+            "from_input_index": 7
+          },
+          "format": null,
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      },
+      {
+        "name": "client",
+        "datatype": {
+          "type": "string",
+          "index": true,
+          "source": {
+            "from_input_index": 9
+          },
+          "format": null,
+          "resolution": "seconds",
+          "default": null,
+          "script": null
+        }
+      }
+    ],
+    "compression": "",
+    "format_details": {
+      "quote": "\"",
+      "escape": "\"",
+      "comment": "#",
+      "delimiter": " ",
+      "skip_head": 0,
+      "buffer_size": 4096,
+      "skip_comments": false,
+      "windows_ending": false
+    }
+  },
+  "type": "csv"
+}

@@ -1,0 +1,211 @@
+
+### This transformed was pulled from: 
+###     https://www.kaggle.com/datasets/vishnu0399/server-logs?select=logfiles.log
+###     CCO license
+###
+### The transform is a very simple modeling of apache access logs for illustration.
+###
+###  Below are instructions to:
+###
+###      (1) build out a sample project, table, and transform
+###      (2) create the same transform manually with the Hydrolix UI
+###      (3) view some commentary about the transform structure itself
+
+
+####  (1) To build out a sample project, table, and transform using the .json transform file 
+####
+####  (prereq: install hdxcli and set your profile with the tool )    
+####  update {profile} with your hdxcli profile.
+####  Then, run the following (optionally, rename objects):
+#### 
+hdxcli --profile {profile} project create hydrolix_demo_projects
+hdxcli --profile {profile} --project hydrolix_demo_projects table create apache
+hdxcli --profile {profile} --project hydrolix_demo_projects --table apache transform create -f apache_access_logs.json apache_access_logs
+
+
+####  (2) To create the same transform manually with the Hydrolix UI, 
+####  log into the UI of your hydrolix.io. 
+####  Create a new project and table.
+####  Then, create a new csv tranform and do the following:
+
+####  click 'format options' and replace the comma (,) delimiter with a space ( ) - no quotes required, just save changes
+
+####  enter the following into  transform output columns (left box):
+[
+  {
+    "name": "time_ingested",
+    "datatype": {
+      "type": "datetime",
+      "index": false,
+      "primary": true,
+      "source": {
+        "from_automatic_value": "current_time"
+      },
+      "format": "02/01/2006 15:04:05",
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "client_IP",
+    "datatype": {
+      "type": "string",
+      "index": true,
+      "primary": false,
+      "source": {
+        "from_input_index": 0
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "timestamp",
+    "datatype": {
+      "type": "datetime",
+      "index": true,
+      "source": {
+        "from_input_index": 3
+      },
+      "format": "[2/Jan/2006:15:04:05",
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "timezone_offset",
+    "datatype": {
+      "type": "string",
+      "index": true,
+      "primary": false,
+      "source": {
+        "from_input_index": 4
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "request",
+    "datatype": {
+      "type": "string",
+      "index": true,
+      "index_options": {
+        "fulltext": true,
+        "major_separators": "[ ] < > ( ) { } | ! ; , ' \" * \\n \\r \\s \\t & ? +",
+        "minor_separators": "/ : = @ . - $ # % \\ _"
+      },
+      "primary": false,
+      "source": {
+        "from_input_index": 5
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "status_code",
+    "datatype": {
+      "type": "string",
+      "index": true,
+      "source": {
+        "from_input_index": 6
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "request_size",
+    "datatype": {
+      "type": "int64",
+      "index": false,
+      "source": {
+        "from_input_index": 7
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "user_agent",
+    "datatype": {
+      "type": "string",
+      "index": true,
+      "source": {
+        "from_input_index": 9
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  },
+  {
+    "name": "response_time",
+    "datatype": {
+      "type": "int32",
+      "index": true,
+      "source": {
+        "from_input_index": 10
+      },
+      "format": null,
+      "resolution": "seconds",
+      "default": null,
+      "script": null
+    }
+  }
+]
+
+###  enter the below into SQL Transform (middle box)
+SELECT  time_ingested, 
+ client_IP,
+parseDateTimeBestEffort(concat(timestamp::String, ' ', replaceOne(timezone_offset, ']', ''))) AS timestamp,
+timezone_offset,
+request,
+status_code,
+request_size,
+user_agent, 
+response_time
+FROM {STREAM}
+
+###   enter sample data into right box
+233.223.117.90 - - [27/Dec/2037:12:00:00 +0530] "DELETE /usr/admin HTTP/1.0" 502 4963 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4380.0 Safari/537.36 Edg/89.0.759.0" 45
+162.253.4.179 - - [27/Dec/2037:12:00:00 +0530] "GET /usr/admin/developer HTTP/1.0" 200 5041 "http://www.parker-miller.org/tag/list/list/privacy/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36" 3885
+252.156.232.172 - - [27/Dec/2037:12:00:00 +0530] "POST /usr/register HTTP/1.0" 404 5028 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36 OPR/73.0.3856.329" 3350
+182.215.249.159 - - [27/Dec/2037:12:00:00 +0530] "PUT /usr/register HTTP/1.0" 304 4936 "http://www.parker-miller.org/tag/list/list/privacy/" "Mozilla/5.0 (Android 10; Mobile; rv:84.0) Gecko/84.0 Firefox/84.0" 767
+160.36.208.51 - - [27/Dec/2037:12:00:00 +0530] "POST /usr HTTP/1.0" 304 4979 "http://www.parker-miller.org/tag/list/list/privacy/" "Mozilla/5.0 (Linux; Android 10; ONEPLUS A6000) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36 OPR/61.2.3076.56749" 84
+
+ ###  click validate, if you get a clean result in output below, click "publish transform"
+
+
+ ### (3) here are some design decision about the transform:
+ ###
+ ###     (a) the majority of fields are strings, 
+ ###     (b) status_code will have distinct values with low cardinality 
+ ###               will be indexed so that a solution like grafana can easily facet through in a dropdown
+ ###     (c) two timestamps are chosen here - 
+ ###               one is time of ingestion which is automatically set upon ingesting a document into Hydrolix
+ ###               the other is part of the apache log.  
+ ###               timestamp fields follow a go format
+ ###               notice how timezone_offset is combined with the apache timestamp using Clickhouse functions
+ ###               to keep spec simple, the offset field was kept; in a real world example, this would be made null after using
+ ###     (d) notice how the request field is enabled for full text search
+ ###               to encourage simple demo pulls, the transform author opted not to split up the request
+ ###               please do note Clickhouse SQL is amazing!
+ ###     (e) most fields have been indexed, so you can run SELECT statements on them
+ ###               the request_size field will be an int64, so a SELECT can aggregate by sums and filter by threshold for example  
+ ###
+ ###     Design is a paper never done.  Please do take over and enhance!  
