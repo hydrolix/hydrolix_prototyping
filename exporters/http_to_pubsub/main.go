@@ -2,7 +2,7 @@
 // and publish messages containing that data to Google Pub/Sub. See the block of
 // constants below for settings for your environment. A full write-up of the
 // methods used here is available at
-// https://docs.hydrolix.io/docs/export-pubsub.
+// https://docs.hydrolix.io/docs/export-http-to-pubsub.
 //
 // Note that this is an approach for low-throughput tables. Situations with
 // higher throughput could require non-blocking posts, tracking the size of
