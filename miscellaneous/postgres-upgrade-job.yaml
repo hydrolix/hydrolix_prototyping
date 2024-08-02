@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-upgrade-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: upgrade
+        image: tianon/postgres-upgrade:11-to-12
+        command: ["/bin/bash"]
+        args:
+        - "-c"
+        - |
+          set -e
+          mkdir -p /pv/data_12
+          chown -R postgres:postgres /pv/data_12
+          su postgres -c "/usr/lib/postgresql/12/bin/initdb -D /pv/data_12 -U turbine"
+          su postgres -c "/usr/lib/postgresql/12/bin/pg_upgrade --old-datadir=/pv/data --new-datadir=/pv/data_12 --old-bindir=/usr/lib/postgresql/11/bin --new-bindir=/usr/lib/postgresql/12/bin --user=turbine"
+
+          # Test the upgrade
+          su postgres -c "/usr/lib/postgresql/12/bin/pg_ctl -D /pv/data_12 -l logfile start"
+          su postgres -c "/usr/lib/postgresql/12/bin/psql -d keycloak -U turbine -c 'SELECT version();'"
+          su postgres -c "/usr/lib/postgresql/12/bin/pg_ctl -D /pv/data_12 stop"
+
+          echo "host    all    all    all    md5" >> /pv/data_12/pg_hba.conf
+          rm -rf /pv/data/*
+          cp -R /pv/data_12/* /pv/data/
+          chown -R postgres:postgres /pv/data
+          chmod 700 /pv/data
+
+          echo "Upgrade completed successfully!"
+        volumeMounts:
+        - name: pgdata
+          mountPath: /pv
+      restartPolicy: Never
+      volumes:
+      - name: pgdata
+        persistentVolumeClaim:
+          claimName: data-postgres-0
