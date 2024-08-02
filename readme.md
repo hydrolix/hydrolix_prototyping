@@ -1,8 +1,8 @@
-This set of projects was created in order to provide various examples of how to work with Hydrolix. It also serves as repository for other miscellaneous scripts.
+This repository was created in order to provide various examples of how to work with Hydrolix. It also serves as repository for other miscellaneous scripts.
 
 View the README.md file in each directory for more information.
 
-* A [demonstration Google Pub/Sub exporter](exporters/http_to_pubsub) for your hydrolix data
+* A [demonstration Google Pub/Sub exporter](exporters/http_to_pubsub) for your Hydrolix data
 * A [Getting Started Guide](nginx_web_access_logs) with NGINX web access logs to accompany our [Getting Started tutorial](https://docs.hydrolix.io/docs/getting-started-on-hydrolix)
 * [Sample transforms](sample_transforms) for:
   * NGINX web access logs
